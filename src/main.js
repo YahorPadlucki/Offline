@@ -1,14 +1,12 @@
 init = function () {
-    kontra.init()
-
-    console.log('!')
+    kontra.init();
 
     let sprite = kontra.sprite({
         x: 100,
         y: 80,
         color: 'red',
-        width: 20,
-        height: 40,
+        width: 15,
+        height: 15,
         dx: 2
     });
 
