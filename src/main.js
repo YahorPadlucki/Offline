@@ -1,25 +1,14 @@
 init = function () {
     kontra.init();
 
-    let sprite = kontra.sprite({
-        x: 100,
-        y: 80,
-        color: 'red',
-        width: 15,
-        height: 15,
-        dx: 2
-    });
+    const player  = new Player();
 
     let loop = kontra.gameLoop({
         update: function() {
-            sprite.update();
-
-            if (sprite.x > kontra.canvas.width) {
-                sprite.x = -sprite.width;
-            }
+            player.update();
         },
         render: function() {
-            sprite.render();
+            player.render();
         }
     });
 

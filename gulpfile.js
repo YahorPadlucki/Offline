@@ -1,120 +1,80 @@
-const gulp = require('gulp');
+var config = require('./gulp.config')();
 
-const lintHTML = require('gulp-htmllint');
-const lintCSS = require('gulp-stylelint');
-const lintJS = require('gulp-eslint');
-const deleteFiles = require('gulp-rimraf');
-const minifyHTML = require('gulp-minify-html');
-const minifyCSS = require('gulp-clean-css');
-const minifyJS = require('gulp-terser');
-const concat = require('gulp-concat');
-const rename = require('gulp-rename');
-const replaceHTML = require('gulp-html-replace');
-const imagemin = require('gulp-imagemin');
-const zip = require('gulp-zip');
-const checkFileSize = require('gulp-check-filesize');
+var gulp = require('gulp'),
+    concat = require('gulp-concat'),
+    uglify = require('gulp-uglify'),
+    zip = require('gulp-zip'),
+    size = require('gulp-size'),
+    inject = require('gulp-inject'),
+    del = require('del'),
+    browserSync = require('browser-sync').create();
 
-const paths = {
-    src: {
-        html: 'src/index.html',
-        css: 'src/css/*.css',
-        js: 'src/js/*.js',
-        images: 'src/images/*'
-    },
-    dist: {
-        dir: 'dist',
-        css: 'style.min.css',
-        js: 'script.min.js',
-        images: 'dist/images'
-    }
-};
+gulp.task('clean', clean);
+gulp.task('compile', compile);
+gulp.task('compile-watch', ['build'], compileWatch);
+gulp.task('build', ['clean', 'compile'], buildZip);
+gulp.task('serve', ['build'],  serve);
+gulp.task('zip', buildZip);
 
-gulp.task('lintHTML', () => {
-    return gulp.src('src/index.html')
-        .pipe(lintHTML());
-});
+gulp.task('default', ['build']);
 
-gulp.task('lintCSS', () => {
-    return gulp.src(paths.src.css)
-        .pipe(lintCSS({
-            reporters: [{ formatter: 'string', console: true }]
-        }));
-});
+function clean() {
+    return del(config.release.index);
+}
 
-gulp.task('lintJS', () => {
-    return gulp.src(paths.src.js)
-        .pipe(lintJS())
-        .pipe(lintJS.failAfterError());
-});
+function compile() {
+    return buildIndex();
+}
 
-gulp.task('cleanDist', () => {
-    return gulp.src('dist/*', { read: false })
-        .pipe(deleteFiles());
-});
+function compileWatch(done) {
+    browserSync.reload();
+    done();
+}
 
-gulp.task('buildHTML', () => {
-    return gulp.src(paths.src.html)
-        .pipe(replaceHTML({
-            css: paths.dist.css,
-            js: paths.dist.js
+function serve() {
+    browserSync.init({
+        server: {
+            baseDir: config.release.index,
+            middleware: function (req, res, next) {
+                res.setHeader('Access-Control-Allow-Origin', '*');
+                next();
+            }
+        }
+    });
+
+    gulp.watch([
+        config.sources.index,
+        config.sources.scripts,
+        config.sources.stylesheets
+    ], ['compile-watch']);
+
+}
+
+function buildIndex() {
+    return gulp.src(config.sources.index)
+        .pipe(inject(buildScripts(), {relative: false, ignorePath: '/release'}))
+        .pipe(gulp.dest(config.release.index))
+        .on('error', handleError);
+}
+
+function buildScripts() {
+    return gulp.src(config.sources.scripts)
+        .pipe(concat('main.js'))
+        .pipe(uglify().on('error', function(e){
+            console.log(e);
         }))
-        .pipe(minifyHTML())
-        .pipe(rename('index.html'))
-        .pipe(gulp.dest(paths.dist.dir));
-});
+        .pipe(gulp.dest(config.release.scripts));
+}
 
-gulp.task('buildCSS', () => {
-    return gulp.src(paths.src.css)
-        .pipe(concat(paths.dist.css))
-        .pipe(minifyCSS())
-        .pipe(gulp.dest(paths.dist.dir));
-});
+function buildZip() {
+    return gulp.src(config.release.index + '/**/*')
+        .pipe(zip('offline.zip'))
+        .pipe(gulp.dest(''))
+        .pipe(size({
+            pretty: false
+        }));
+}
 
-gulp.task('buildJS', () => {
-    return gulp.src(paths.src.js)
-        .pipe(concat(paths.dist.js))
-        .pipe(minifyJS())
-        .pipe(gulp.dest(paths.dist.dir));
-});
-
-gulp.task('optimizeImages', () => {
-    return gulp.src(paths.src.images)
-        .pipe(imagemin())
-        .pipe(gulp.dest(paths.dist.images));
-});
-
-gulp.task('zip', () => {
-    const thirteenKb = 13 * 1024;
-
-    gulp.src('zip/*')
-        .pipe(deleteFiles());
-
-    return gulp.src(`${paths.dist.dir}/**`)
-        .pipe(zip('game.zip'))
-        .pipe(gulp.dest('zip'))
-        .pipe(checkFileSize({ fileSizeLimit: thirteenKb }));
-});
-
-gulp.task('test', gulp.parallel(
-    'lintHTML',
-    'lintCSS',
-    'lintJS'
-));
-
-gulp.task('build', gulp.series(
-    'cleanDist',
-    gulp.parallel('buildHTML', 'buildCSS', 'buildJS', 'optimizeImages'),
-    'zip'
-));
-
-gulp.task('watch', () => {
-    gulp.watch(paths.src.html, gulp.series('buildHTML', 'zip'));
-    gulp.watch(paths.src.css, gulp.series('buildCSS', 'zip'));
-    gulp.watch(paths.src.js, gulp.series('buildJS', 'zip'));
-    gulp.watch(paths.src.images, gulp.series('optimizeImages', 'zip'));
-});
-
-gulp.task('default', gulp.series(
-    'build',
-    'watch'
-));
+function handleError(err) {
+    this.emit('end');
+}
