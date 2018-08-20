@@ -1,9 +1,9 @@
 init = function () {
     kontra.init();
 
-    const player  = new Player();
+    var player  = new Player();
 
-    let loop = kontra.gameLoop({
+    var loop = kontra.gameLoop({
         update: function() {
             player.update();
         },
@@ -17,4 +17,4 @@ init = function () {
 
 };
 
-window.addEventListener('load', init, false);
+addEventListener('load', init, false);
