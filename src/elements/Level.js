@@ -4,7 +4,7 @@ var Level = (function () {
 
         this.columns = 10;
         this.rows = 10;
-        this.tileSize = 10;
+        this.tileSize = GameModel.getInstance().TILE;
 
         this.level = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],

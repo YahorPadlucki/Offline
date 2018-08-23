@@ -8,6 +8,7 @@ var GameModel = (function () {
             engine: "",
             score: 0,
             device: "",
+            TILE: 32,
         };
 
     }
