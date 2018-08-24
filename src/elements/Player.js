@@ -2,13 +2,11 @@ var Player = (function () {
 
     function Player() {
 
-        this.x = 0;
-        this.y = 0;
+        this.x = 32;
+        this.y = 32;
 
         this.dx = 0;
         this.dy = 0;
-
-        this.speed = 100;
 
         this.friction = 1 / 6;
         this.accel = 1 / 2;
@@ -18,23 +16,25 @@ var Player = (function () {
         this.maxdx = 15;     // default max horizontal speed (15 tiles per second)
         this.maxdy = 60;      // default max vertical speed   (60 tiles per second)
 
-
         this.falling = false;
         this.jumping = false;
         this.jump = false;
 
         this.tileSize = GameModel.getInstance().TILE;
         this.TILE = GameModel.getInstance().TILE;
+        this.levelWidth = GameModel.getInstance().columns;
+
+        this.level = GameModel.getInstance().level;
+
+        this.cells = [];
+        for (var i = 0; i < this.level.length; i++) {
+            this.cells = this.cells.concat(this.level[i]);
+        }
 
 
         this.canvasWidth = GameModel.getInstance().ctx.canvas.width;
     }
 
-    Player.prototype.update = function (deltaTime) {
-        this.x += this.speed * deltaTime;
-        if (this.x > this.canvasWidth)
-            this.x = -this.width;
-    };
 
     Player.prototype.draw = function (dt) {
         var ctx = GameModel.getInstance().ctx;
@@ -44,7 +44,7 @@ var Player = (function () {
     };
 
 
-    Player.prototype.updateEntity = function (dt) {
+    Player.prototype.update = function (dt) {
         var wasleft = this.dx < 0,
             wasright = this.dx > 0,
             falling = this.falling,
@@ -79,19 +79,19 @@ var Player = (function () {
             this.dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
         }
 
-        var tx = p2t(this.x),
-            ty = p2t(this.y),
-            nx = this.x % TILE,
-            ny = this.y % TILE,
-            cell = tcell(tx, ty),
-            cellright = tcell(tx + 1, ty),
-            celldown = tcell(tx, ty + 1),
-            celldiag = tcell(tx + 1, ty + 1);
+        var tx = this.p2t(this.x),
+            ty = this.p2t(this.y),
+            nx = this.x % this.TILE,
+            ny = this.y % this.TILE,
+            cell = this.tcell(tx, ty),
+            cellright = this.tcell(tx + 1, ty),
+            celldown = this.tcell(tx, ty + 1),
+            celldiag = this.tcell(tx + 1, ty + 1);
 
         if (this.dy > 0) {
             if ((celldown && !cell) ||
                 (celldiag && !cellright && nx)) {
-                this.y = t2p(ty);
+                this.y = this.t2p(ty);
                 this.dy = 0;
                 this.falling = false;
                 this.jumping = false;
@@ -101,7 +101,7 @@ var Player = (function () {
         else if (this.dy < 0) {
             if ((cell && !celldown) ||
                 (cellright && !celldiag && nx)) {
-                this.y = t2p(ty + 1);
+                this.y = this.t2p(ty + 1);
                 this.dy = 0;
                 cell = celldown;
                 cellright = celldiag;
@@ -112,14 +112,14 @@ var Player = (function () {
         if (this.dx > 0) {
             if ((cellright && !cell) ||
                 (celldiag && !celldown && ny)) {
-                this.x = t2p(tx);
+                this.x = this.t2p(tx);
                 this.dx = 0;
             }
         }
         else if (this.dx < 0) {
             if ((cell && !cellright) ||
                 (celldown && !celldiag && ny)) {
-                this.x = t2p(tx + 1);
+                this.x = this.t2p(tx + 1);
                 this.dx = 0;
             }
         }
@@ -144,12 +144,44 @@ var Player = (function () {
         return Math.max(min, Math.min(max, x));
     }
 
-    var t2p      = function(t)     { return t*this.TILE;                  },
-        p2t      = function(p)     { return Math.floor(p/this.TILE);      },
-        cell     = function(x,y)   { return tcell(p2t(x),p2t(y));    },
-        tcell    = function(tx,ty) { return cells[tx + (ty*MAP.tw)]; };
+    Player.prototype.t2p = function (t) {
+        return t * this.TILE;
+    };
+    Player.prototype.p2t = function (p) {
+        return Math.floor(p / this.TILE);
+    };
+    Player.prototype.cell = function (x, y) {
+        return this.tcell(this.p2t(x), this.p2t(y));
+    };
+    Player.prototype.tcell = function (tx, ty) {
+        return this.cells[tx + (ty * this.levelWidth)];
+    };
+
+    Player.prototype.onkey = function (ev, key, down) {
+        switch (key) {
+            case KEY.LEFT:
+                this.left = down;
+                ev.preventDefault();
+                return false;
+            case KEY.RIGHT:
+                this.right = down;
+                ev.preventDefault();
+                return false;
+            case KEY.SPACE:
+                this.jump = down;
+                ev.preventDefault();
+                return false;
+        }
+    };
+
+    KEY = {SPACE: 32, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40};
+
+
 
     return Player;
+
 }());
+
+
 
 
