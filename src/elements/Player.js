@@ -2,26 +2,26 @@ var Player = (function () {
 
     function Player() {
 
-        this.x = 32;
-        this.y = 32;
+        this.tileSize = GameModel.getInstance().TILE;
+
+        this.x =  this.tileSize;
+        this.y =  0;
 
         this.dx = 0;
         this.dy = 0;
 
         this.friction = 1 / 6;
-        this.accel = 1 / 2;
+        this.accel = 100;
         this.gravity = 9.8 * 6;
-        this.impulse = 1500;
+        this.impulse = 150;
 
-        this.maxdx = 15;     // default max horizontal speed (15 tiles per second)
+        this.maxdx = 30;     // default max horizontal speed (15 tiles per second)
         this.maxdy = 60;      // default max vertical speed   (60 tiles per second)
 
         this.falling = false;
         this.jumping = false;
         this.jump = false;
 
-        this.tileSize = GameModel.getInstance().TILE;
-        this.TILE = GameModel.getInstance().TILE;
         this.levelWidth = GameModel.getInstance().columns;
 
         this.level = GameModel.getInstance().level;
@@ -44,7 +44,7 @@ var Player = (function () {
     };
 
 
-    Player.prototype.update = function (dt) {
+    Player.prototype.update = function (deltaTime) {
         var wasleft = this.dx < 0,
             wasright = this.dx > 0,
             falling = this.falling,
@@ -69,10 +69,10 @@ var Player = (function () {
             this.jumping = true;
         }
 
-        this.x = this.x + (dt * this.dx);
-        this.y = this.y + (dt * this.dy);
-        this.dx = bound(this.dx + (dt * this.ddx), -this.maxdx, this.maxdx);
-        this.dy = bound(this.dy + (dt * this.ddy), -this.maxdy, this.maxdy);
+        this.x = this.x + (deltaTime * this.dx);
+        this.y = this.y + (deltaTime * this.dy);
+        this.dx = bound(this.dx + (deltaTime * this.ddx), -this.maxdx, this.maxdx);
+        this.dy = bound(this.dy + (deltaTime * this.ddy), -this.maxdy, this.maxdy);
 
         if ((wasleft && (this.dx > 0)) ||
             (wasright && (this.dx < 0))) {
@@ -81,8 +81,8 @@ var Player = (function () {
 
         var tx = this.p2t(this.x),
             ty = this.p2t(this.y),
-            nx = this.x % this.TILE,
-            ny = this.y % this.TILE,
+            nx = this.x % this.tileSize,
+            ny = this.y % this.tileSize,
             cell = this.tcell(tx, ty),
             cellright = this.tcell(tx + 1, ty),
             celldown = this.tcell(tx, ty + 1),
@@ -135,7 +135,7 @@ var Player = (function () {
              }
          }*/
 
-        this.falling = !(celldown || (nx && celldiag));
+        this.falling = !(cell || (nx && celldiag));
 
     };
 
@@ -145,10 +145,10 @@ var Player = (function () {
     }
 
     Player.prototype.t2p = function (t) {
-        return t * this.TILE;
+        return t * this.tileSize;
     };
     Player.prototype.p2t = function (p) {
-        return Math.floor(p / this.TILE);
+        return Math.floor(p / this.tileSize);
     };
     Player.prototype.cell = function (x, y) {
         return this.tcell(this.p2t(x), this.p2t(y));

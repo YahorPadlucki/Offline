@@ -1,12 +1,14 @@
 init = function () {
     var engine = new Engine();
 
+    var level = new Level();
+    engine.elementsToDraw.push(level)
+
     var player = new Player();
     engine.elementsToDraw.push(player);
     engine.elementsToUpdate.push(player);
 
-    var level = new Level();
-    engine.elementsToDraw.push(level)
+
 
 
     addEventListener('keydown', function (ev) {
