@@ -4,23 +4,26 @@ var Player = (function () {
 
         this.tileSize = GameModel.getInstance().TILE;
 
-        this.x =  this.tileSize;
-        this.y =  0;
+        this.x = this.tileSize;
+        this.y = 0;
 
         this.dx = 0;
         this.dy = 0;
 
         this.friction = 1 / 6;
-        this.accel = 100;
+        this.accel = 300;
         this.gravity = 9.8 * 6;
         this.impulse = 150;
 
-        this.maxdx = 30;     // default max horizontal speed (15 tiles per second)
+        this.maxdx = 120;     // default max horizontal speed (15 tiles per second)
         this.maxdy = 60;      // default max vertical speed   (60 tiles per second)
 
         this.falling = false;
         this.jumping = false;
         this.jump = false;
+
+        this.xGravity = 0;
+        this.yGravity = 1;
 
         this.levelWidth = GameModel.getInstance().columns;
 
@@ -47,12 +50,19 @@ var Player = (function () {
     Player.prototype.update = function (deltaTime) {
         var wasleft = this.dx < 0,
             wasright = this.dx > 0,
+            wasup = this.dy < 0,
+            wasdown = this.dy > 0,
             falling = this.falling,
             friction = this.friction * (falling ? 0.5 : 1),
             accel = this.accel * (falling ? 0.5 : 1);
 
-        this.ddx = 0;
-        this.ddy = this.gravity;
+
+        if (this.rigtSide) {
+
+        }
+
+        this.ddx = this.gravity * this.xGravity;
+        this.ddy = this.gravity * this.yGravity;
 
         if (this.left)
             this.ddx = this.ddx - accel;
@@ -63,6 +73,16 @@ var Player = (function () {
             this.ddx = this.ddx + accel;
         else if (wasright)
             this.ddx = this.ddx - friction;
+
+        if (this.up)
+            this.ddy = this.ddy - accel;
+        else if (wasup)
+            this.ddy = this.ddy + friction;
+
+        if (this.down)
+            this.ddy = this.ddy + accel;
+        else if (wasdown)
+            this.ddy = this.ddy - friction;
 
         if (this.jump && !this.jumping && !falling) {
             this.ddy = this.ddy - this.impulse; // an instant big force impulse
@@ -115,8 +135,17 @@ var Player = (function () {
                 this.x = this.t2p(tx);
                 this.dx = 0;
             }
+
+            if (celldown == 2) {
+                this.dx = bound((this.dx + (deltaTime * this.ddx*this.xGravity)), -this.maxdx, this.maxdx);
+                this.y = this.t2p(ty + 1);
+                this.yGravity = 0;
+                this.xGravity = -1;
+                this.turnDown = true;
+
+            }
         }
-        else if (this.dx < 0) {
+        else if (this.dx < 0&&cell!==2) {
             if ((cell && !cellright) ||
                 (celldown && !celldiag && ny)) {
                 this.x = this.t2p(tx + 1);
@@ -135,7 +164,7 @@ var Player = (function () {
              }
          }*/
 
-        this.falling = !(cell || (nx && celldiag));
+        // this.falling = !(cell || (nx && celldiag));
 
     };
 
@@ -167,6 +196,14 @@ var Player = (function () {
                 this.right = down;
                 ev.preventDefault();
                 return false;
+            case KEY.UP:
+                this.up = down;
+                ev.preventDefault();
+                return false;
+            case KEY.DOWN:
+                this.down = down;
+                ev.preventDefault();
+                return false;
             case KEY.SPACE:
                 this.jump = down;
                 ev.preventDefault();
@@ -175,7 +212,6 @@ var Player = (function () {
     };
 
     KEY = {SPACE: 32, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40};
-
 
 
     return Player;
