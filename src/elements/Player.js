@@ -4,8 +4,8 @@ var Player = (function () {
 
         this.tileSize = GameModel.getInstance().TILE;
 
-        this.x = this.tileSize;
-        this.y = 0;
+        this.x = this.tileSize * 3;
+        this.y = this.tileSize;
 
         this.dx = 0;
         this.dy = 0;
@@ -15,8 +15,8 @@ var Player = (function () {
         this.gravity = 9.8 * 6;
         this.impulse = 150;
 
-        this.maxdx = 120;     // default max horizontal speed (15 tiles per second)
-        this.maxdy = 60;      // default max vertical speed   (60 tiles per second)
+        this.maxdx = 10;     // default max horizontal speed (15 tiles per second)
+        this.maxdy = 10;      // default max vertical speed   (60 tiles per second)
 
         this.falling = false;
         this.jumping = false;
@@ -34,6 +34,13 @@ var Player = (function () {
             this.cells = this.cells.concat(this.level[i]);
         }
 
+
+        this.topBorder = true;
+        this.rigthBorder = false;
+        this.leftBorder = false;
+        this.bottomBorder = false;
+
+        this.speed = 10;
 
         this.canvasWidth = GameModel.getInstance().ctx.canvas.width;
     }
@@ -57,47 +64,64 @@ var Player = (function () {
             accel = this.accel * (falling ? 0.5 : 1);
 
 
-        if (this.rigtSide) {
+        if (this.topBorder) {
+            this.ddx = this.speed;
+            this.ddy = 0;
 
+            if(this.up){
+                this.ddy = this.ddy - this.impulse; // an instant big force impulse
+                this.jumping = true;
+            }
+        }
+        if (this.rigthBorder) {
+            this.ddx = 0;
+            this.ddy = this.speed;
+        }
+        if (this.bottomBorder) {
+            this.ddx = -this.speed;
+            this.ddy = 0;
         }
 
-        this.ddx = this.gravity * this.xGravity;
-        this.ddy = this.gravity * this.yGravity;
-
-        if (this.left)
-            this.ddx = this.ddx - accel;
-        else if (wasleft)
-            this.ddx = this.ddx + friction;
-
-        if (this.right)
-            this.ddx = this.ddx + accel;
-        else if (wasright)
-            this.ddx = this.ddx - friction;
-
-        if (this.up)
-            this.ddy = this.ddy - accel;
-        else if (wasup)
-            this.ddy = this.ddy + friction;
-
-        if (this.down)
-            this.ddy = this.ddy + accel;
-        else if (wasdown)
-            this.ddy = this.ddy - friction;
-
-        if (this.jump && !this.jumping && !falling) {
-            this.ddy = this.ddy - this.impulse; // an instant big force impulse
-            this.jumping = true;
+        if (this.leftBorder) {
+            this.ddx = 0;
+            this.ddy = -this.speed;
         }
+
+        /*   if (this.left)
+               this.ddx = this.ddx - accel;
+           else if (wasleft)
+               this.ddx = this.ddx + friction;
+
+       if (this.right)
+           this.ddx = this.ddx + accel;
+       else if (wasright)
+           this.ddx = this.ddx - friction;
+
+       if (this.up)
+           this.ddy = this.ddy - accel;
+       else if (wasup)
+           this.ddy = this.ddy + friction;
+
+       if (this.down)
+           this.ddy = this.ddy + accel;
+       else if (wasdown)
+           this.ddy = this.ddy - friction;
+
+       if (this.jump && !this.jumping && !falling) {
+           this.ddy = this.ddy - this.impulse; // an instant big force impulse
+           this.jumping = true;
+       }*/
+
 
         this.x = this.x + (deltaTime * this.dx);
         this.y = this.y + (deltaTime * this.dy);
         this.dx = bound(this.dx + (deltaTime * this.ddx), -this.maxdx, this.maxdx);
         this.dy = bound(this.dy + (deltaTime * this.ddy), -this.maxdy, this.maxdy);
 
-        if ((wasleft && (this.dx > 0)) ||
+       /* if ((wasleft && (this.dx > 0)) ||
             (wasright && (this.dx < 0))) {
             this.dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
-        }
+        }*/
 
         var tx = this.p2t(this.x),
             ty = this.p2t(this.y),
@@ -108,50 +132,84 @@ var Player = (function () {
             celldown = this.tcell(tx, ty + 1),
             celldiag = this.tcell(tx + 1, ty + 1);
 
+
         if (this.dy > 0) {
-            if ((celldown && !cell) ||
+            if ((!celldown && cell) ||
                 (celldiag && !cellright && nx)) {
                 this.y = this.t2p(ty);
+                this.dx = -this.dy;
                 this.dy = 0;
                 this.falling = false;
                 this.jumping = false;
+                this.rigthBorder = false;
+                this.bottomBorder = true;
                 ny = 0;
             }
-        }
-        else if (this.dy < 0) {
-            if ((cell && !celldown) ||
+        } else if (this.dy < 0&&!this.jumping) {
+            if ((!cell && celldown) ||
                 (cellright && !celldiag && nx)) {
                 this.y = this.t2p(ty + 1);
+                this.dx = - this.dy;
                 this.dy = 0;
                 cell = celldown;
                 cellright = celldiag;
                 ny = 0;
+                this.leftBorder = false;
+                this.topBorder = true;
             }
         }
+
 
         if (this.dx > 0) {
-            if ((cellright && !cell) ||
+            if ((!cellright && cell) ||
                 (celldiag && !celldown && ny)) {
                 this.x = this.t2p(tx);
+                this.dy = this.dx;
                 this.dx = 0;
+                this.topBorder = false;
+                this.rigthBorder = true;
             }
-
-            if (celldown == 2) {
-                this.dx = bound((this.dx + (deltaTime * this.ddx*this.xGravity)), -this.maxdx, this.maxdx);
-                this.y = this.t2p(ty + 1);
-                this.yGravity = 0;
-                this.xGravity = -1;
-                this.turnDown = true;
-
-            }
-        }
-        else if (this.dx < 0&&cell!==2) {
-            if ((cell && !cellright) ||
+        } else if (this.dx < 0) {
+            if ((!cell && cellright) ||
                 (celldown && !celldiag && ny)) {
                 this.x = this.t2p(tx + 1);
+                this.dy = this.dx;
                 this.dx = 0;
+                this.bottomBorder = false;
+                this.leftBorder = true;
             }
         }
+
+
+        /*
+
+
+                else if (this.dy < 0) {
+                    if ((cell && !celldown) ||
+                        (cellright && !celldiag && nx)) {
+                        this.y = this.t2p(ty + 1);
+                        this.dy = 0;
+                        cell = celldown;
+                        cellright = celldiag;
+                        ny = 0;
+                    }
+                }
+
+                if (this.dx > 0) {
+                    if ((cellright && !cell) ||
+                        (celldiag && !celldown && ny)) {
+                        this.x = this.t2p(tx);
+                        this.dx = 0;
+                    }
+                }
+                else if (this.dx < 0) {
+                    if ((cell && !cellright) ||
+                        (celldown && !celldiag && ny)) {
+                        this.x = this.t2p(tx + 1);
+                        this.dx = 0;
+                    }
+                }
+        */
 
         /* if (this.monster) {
              if (this.left && (cell || !celldown)) {
