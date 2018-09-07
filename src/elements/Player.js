@@ -15,8 +15,8 @@ var Player = (function () {
         this.gravity = 9.8 * 6;
         this.impulse = 150;
 
-        this.maxdx = 10;     // default max horizontal speed (15 tiles per second)
-        this.maxdy = 10;      // default max vertical speed   (60 tiles per second)
+        this.maxdx = 30;     // default max horizontal speed (15 tiles per second)
+        this.maxdy = 30;      // default max vertical speed   (60 tiles per second)
 
         this.falling = false;
         this.jumping = false;
@@ -40,7 +40,7 @@ var Player = (function () {
         this.leftBorder = false;
         this.bottomBorder = false;
 
-        this.speed = 10;
+        this.speed = 30;
 
         this.canvasWidth = GameModel.getInstance().ctx.canvas.width;
     }
@@ -68,10 +68,8 @@ var Player = (function () {
             this.ddx = this.speed;
             this.ddy = 0;
 
-            if(this.up){
-                this.ddy = this.ddy - this.impulse; // an instant big force impulse
-                this.jumping = true;
-            }
+            // if(this.up){
+            // }
         }
         if (this.rigthBorder) {
             this.ddx = 0;
@@ -118,10 +116,10 @@ var Player = (function () {
         this.dx = bound(this.dx + (deltaTime * this.ddx), -this.maxdx, this.maxdx);
         this.dy = bound(this.dy + (deltaTime * this.ddy), -this.maxdy, this.maxdy);
 
-       /* if ((wasleft && (this.dx > 0)) ||
-            (wasright && (this.dx < 0))) {
-            this.dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
-        }*/
+        /* if ((wasleft && (this.dx > 0)) ||
+             (wasright && (this.dx < 0))) {
+             this.dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
+         }*/
 
         var tx = this.p2t(this.x),
             ty = this.p2t(this.y),
@@ -132,6 +130,31 @@ var Player = (function () {
             celldown = this.tcell(tx, ty + 1),
             celldiag = this.tcell(tx + 1, ty + 1);
 
+//this.up &&
+//         console.log(this.cell(tx,ty))
+
+        if(this.up){
+            console.log(nx)
+            if(this.bottomBorder){
+                if(cellright===2)
+                    GameModel.getInstance().level[ty][tx+1]=1
+
+            }else
+            if(this.leftBorder){
+                if(celldown===2)
+                    GameModel.getInstance().level[ty+1][tx]=1
+
+            }else
+            if ((nx<=this.tileSize/2&&cell==2)) {
+
+                GameModel.getInstance().level[ty][tx]=0
+            }
+            if(nx>=this.tileSize/2&&cellright==2){
+                GameModel.getInstance().level[ty][tx+1]=0
+            }
+        }
+
+
 
         if (this.dy > 0) {
             if ((!celldown && cell) ||
@@ -140,16 +163,15 @@ var Player = (function () {
                 this.dx = -this.dy;
                 this.dy = 0;
                 this.falling = false;
-                this.jumping = false;
                 this.rigthBorder = false;
                 this.bottomBorder = true;
                 ny = 0;
             }
-        } else if (this.dy < 0&&!this.jumping) {
+        } else if (this.dy < 0) {
             if ((!cell && celldown) ||
                 (cellright && !celldiag && nx)) {
                 this.y = this.t2p(ty + 1);
-                this.dx = - this.dy;
+                this.dx = -this.dy;
                 this.dy = 0;
                 cell = celldown;
                 cellright = celldiag;
@@ -226,6 +248,9 @@ var Player = (function () {
 
     };
 
+    Player.prototype.colorCellInBlack = function (tx, ty) {
+
+    }
 
     function bound(x, min, max) {
         return Math.max(min, Math.min(max, x));
@@ -263,7 +288,6 @@ var Player = (function () {
                 ev.preventDefault();
                 return false;
             case KEY.SPACE:
-                this.jump = down;
                 ev.preventDefault();
                 return false;
         }
