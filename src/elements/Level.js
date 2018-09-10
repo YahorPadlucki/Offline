@@ -10,7 +10,17 @@ var Level = (function () {
 
 
     Level.prototype.draw = function () {
-        var ctx = GameModel.getInstance().ctx;
+
+        var model=GameModel.getInstance();
+        var ctx = model.ctx;
+
+        if(model.prevLevelImageData){
+            // model.prevLevelImageData.width = 200;
+            // model.prevLevelImageData.height = 200;
+            ctx.putImageData(model.prevLevelImageData,50,50);
+        }
+
+
         for (i = 0; i < this.rows; i++) {
             for (j = 0; j < this.columns; j++) {
                 if (this.level[i][j] === 1) {
@@ -19,7 +29,15 @@ var Level = (function () {
 
                 }
                 if (this.level[i][j] === 2) {
-                    ctx.fillStyle = "#00ff00";
+                    ctx.fillStyle = "#ff1037";
+                    ctx.fillRect(j * this.tileSize, i * this.tileSize, this.tileSize, this.tileSize);
+
+                }
+                if (this.level[i][j] === 3) {
+                    if (GameModel.getInstance().levelCompleted)
+                        ctx.fillStyle = "#000000";
+                    else
+                        ctx.fillStyle = "#8a8b87";
                     ctx.fillRect(j * this.tileSize, i * this.tileSize, this.tileSize, this.tileSize);
 
                 }

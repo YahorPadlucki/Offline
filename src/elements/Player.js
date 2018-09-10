@@ -2,36 +2,37 @@ var Player = (function () {
 
     function Player() {
 
-        this.tileSize = GameModel.getInstance().TILE;
+        this.model = GameModel.getInstance();
 
-        this.x = this.tileSize*2;
-        this.y = this.tileSize ;
+        this.tileSize = this.model.TILE;
+
+        this.x = this.tileSize * 2;
+        this.y = this.tileSize;
 
         this.dx = 0;
         this.dy = 0;
 
-        this.friction = 1 / 6;
         this.accel = 300;
-        this.gravity = 9.8 * 6;
-        this.impulse = 150;
 
-        this.maxdx = 30;     // default max horizontal speed (15 tiles per second)
-        this.maxdy = 30;      // default max vertical speed   (60 tiles per second)
+        this.maxdx = 200;     // default max horizontal speed (15 tiles per second)
+        this.maxdy = 200;      // default max vertical speed   (60 tiles per second)
 
-        this.falling = false;
-        this.jumping = false;
-        this.jump = false;
 
-        this.xGravity = 0;
-        this.yGravity = 1;
+        this.levelWidth = this.model.columns;
 
-        this.levelWidth = GameModel.getInstance().columns;
-
-        this.level = GameModel.getInstance().level;
+        this.level = this.model.level;
 
         this.cells = [];
+        this.brokenTiles = 0;
+
         for (var i = 0; i < this.level.length; i++) {
             this.cells = this.cells.concat(this.level[i]);
+        }
+
+        for (var j = 0; j < this.cells.length; j++) {
+            if (this.cells [j] === this.model.brokenTileId) {
+                this.brokenTiles++;
+            }
         }
 
 
@@ -42,34 +43,24 @@ var Player = (function () {
 
         this.speed = 300;
 
-        this.canvasWidth = GameModel.getInstance().ctx.canvas.width;
+        this.transitionToNextLevel = false;
     }
 
 
     Player.prototype.draw = function (dt) {
-        var ctx = GameModel.getInstance().ctx;
-        ctx.fillStyle = "#ff2900";
+        var ctx = this.model.ctx;
+        ctx.fillStyle = "#09a90d";
 
         ctx.fillRect(this.x + (this.dx * dt), this.y + (this.dy * dt), this.tileSize, this.tileSize)
     };
 
 
     Player.prototype.update = function (deltaTime) {
-        var wasleft = this.dx < 0,
-            wasright = this.dx > 0,
-            wasup = this.dy < 0,
-            wasdown = this.dy > 0,
-            falling = this.falling,
-            friction = this.friction * (falling ? 0.5 : 1),
-            accel = this.accel * (falling ? 0.5 : 1);
-
 
         if (this.topBorder) {
             this.ddx = this.speed;
             this.ddy = 0;
 
-            // if(this.up){
-            // }
         }
         if (this.rightBorder) {
             this.ddx = 0;
@@ -85,30 +76,10 @@ var Player = (function () {
             this.ddy = -this.speed;
         }
 
-        /*   if (this.left)
-               this.ddx = this.ddx - accel;
-           else if (wasleft)
-               this.ddx = this.ddx + friction;
-
-       if (this.right)
-           this.ddx = this.ddx + accel;
-       else if (wasright)
-           this.ddx = this.ddx - friction;
-
-       if (this.up)
-           this.ddy = this.ddy - accel;
-       else if (wasup)
-           this.ddy = this.ddy + friction;
-
-       if (this.down)
-           this.ddy = this.ddy + accel;
-       else if (wasdown)
-           this.ddy = this.ddy - friction;
-
-       if (this.jump && !this.jumping && !falling) {
-           this.ddy = this.ddy - this.impulse; // an instant big force impulse
-           this.jumping = true;
-       }*/
+        if (this.transitionToNextLevel) {
+            this.ddx = this.ddy = 0;
+            this.dx = this.dy = 0;
+        }
 
 
         this.x = this.x + (deltaTime * this.dx);
@@ -116,10 +87,6 @@ var Player = (function () {
         this.dx = bound(this.dx + (deltaTime * this.ddx), -this.maxdx, this.maxdx);
         this.dy = bound(this.dy + (deltaTime * this.ddy), -this.maxdy, this.maxdy);
 
-        /* if ((wasleft && (this.dx > 0)) ||
-             (wasright && (this.dx < 0))) {
-             this.dx = 0; // clamp at zero to prevent friction from making us jiggle side to side
-         }*/
 
         var tx = this.p2t(this.x),
             ty = this.p2t(this.y),
@@ -132,49 +99,43 @@ var Player = (function () {
             cellup = this.tcell(tx, ty - 1);
 
 
-//this.up &&
-//         console.log(this.cell(tx,ty))
-
         if (this.up) {
-            /*   if(this.bottomBorder){
-                   if(cellright===2)
-                       GameModel.getInstance().level[ty][tx+1]=1
-
-               }else
-               if(this.leftBorder){
-                   if(celldown===2)
-                       GameModel.getInstance().level[ty+1][tx]=1
-
-               }else*/
 
             if (this.topBorder || this.bottomBorder) {
                 if ((nx <= this.tileSize / 2 && cell === 2)) {
 
-                    GameModel.getInstance().level[ty][tx] = 0
+
+                    this.fixBrokenCeil(tx, ty);
                 }
                 if (nx >= this.tileSize / 2 && cellright === 2) {
-                    GameModel.getInstance().level[ty][tx + 1] = 0
+                    this.fixBrokenCeil(tx + 1, ty);
+
                 }
-            } else if (this.rightBorder) {
+            } else if (this.rightBorder || this.leftBorder) {
 
                 if (ny >= this.tileSize / 2 && celldown === 2) {
-                    GameModel.getInstance().level[ty + 1][tx] = 0
+                    this.fixBrokenCeil(tx, ty + 1);
+
+
                 } else if (ny >= this.tileSize / 2 && cell === 2) {
-                    GameModel.getInstance().level[ty][tx] = 0
+                    this.fixBrokenCeil(tx, ty);
+
+
                 }
 
-            } else if (this.leftBorder) {
-
-                if (ny >= this.tileSize / 2 && cellup === 2) {
-                    GameModel.getInstance().level[ty - 1][tx] = 0
-                } else if (ny >= this.tileSize / 2 && celldown === 2) {
-                    GameModel.getInstance().level[ty+1][tx] = 0
-                }
-
+            }
+            if (this.brokenTiles === 0&&!this.model.levelCompleted) {
+                this.model.levelCompleted = true;
+                this.model.prevLevelImageData = this.model.ctx.getImageData(0, 0, this.model.ctx.canvas.width, this.model.ctx.canvas.height);
             }
         }
 
 
+        if (cellup === 3 && this.model.levelCompleted === true) {
+            this.y = this.t2p(ty - 1);
+            this.transitionToNextLevel = true
+
+        }
         if (this.dy > 0) { // going down
             if ((!celldown && cell) ||
                 (celldiag && !cellright && nx)) {
@@ -220,60 +181,18 @@ var Player = (function () {
                 this.leftBorder = true;
             }
         }
-
-
-        /*
-
-
-                else if (this.dy < 0) {
-                    if ((cell && !celldown) ||
-                        (cellright && !celldiag && nx)) {
-                        this.y = this.t2p(ty + 1);
-                        this.dy = 0;
-                        cell = celldown;
-                        cellright = celldiag;
-                        ny = 0;
-                    }
-                }
-
-                if (this.dx > 0) {
-                    if ((cellright && !cell) ||
-                        (celldiag && !celldown && ny)) {
-                        this.x = this.t2p(tx);
-                        this.dx = 0;
-                    }
-                }
-                else if (this.dx < 0) {
-                    if ((cell && !cellright) ||
-                        (celldown && !celldiag && ny)) {
-                        this.x = this.t2p(tx + 1);
-                        this.dx = 0;
-                    }
-                }
-        */
-
-        /* if (this.monster) {
-             if (this.left && (cell || !celldown)) {
-                 this.left = false;
-                 this.right = true;
-             }
-             else if (this.right && (cellright || !celldiag)) {
-                 this.right = false;
-                 this.left  = true;
-             }
-         }*/
-
-        // this.falling = !(cell || (nx && celldiag));
-
     };
 
-    Player.prototype.colorCellInBlack = function (tx, ty) {
-
-    }
+    Player.prototype.fixBrokenCeil = function (tx, ty) {
+        if (this.model.level[ty][tx] === this.model.brokenTileId) {
+            this.model.level[ty][tx] = 1;
+            this.brokenTiles--;
+        }
+    };
 
     function bound(x, min, max) {
         return Math.max(min, Math.min(max, x));
-    }
+    };
 
     Player.prototype.t2p = function (t) {
         return t * this.tileSize;
