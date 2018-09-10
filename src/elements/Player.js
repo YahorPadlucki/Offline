@@ -4,8 +4,8 @@ var Player = (function () {
 
         this.tileSize = GameModel.getInstance().TILE;
 
-        this.x = this.tileSize * 3;
-        this.y = this.tileSize;
+        this.x = this.tileSize*2;
+        this.y = this.tileSize ;
 
         this.dx = 0;
         this.dy = 0;
@@ -36,11 +36,11 @@ var Player = (function () {
 
 
         this.topBorder = true;
-        this.rigthBorder = false;
+        this.rightBorder = false;
         this.leftBorder = false;
         this.bottomBorder = false;
 
-        this.speed = 30;
+        this.speed = 300;
 
         this.canvasWidth = GameModel.getInstance().ctx.canvas.width;
     }
@@ -71,7 +71,7 @@ var Player = (function () {
             // if(this.up){
             // }
         }
-        if (this.rigthBorder) {
+        if (this.rightBorder) {
             this.ddx = 0;
             this.ddy = this.speed;
         }
@@ -128,46 +128,65 @@ var Player = (function () {
             cell = this.tcell(tx, ty),
             cellright = this.tcell(tx + 1, ty),
             celldown = this.tcell(tx, ty + 1),
-            celldiag = this.tcell(tx + 1, ty + 1);
+            celldiag = this.tcell(tx + 1, ty + 1),
+            cellup = this.tcell(tx, ty - 1);
+
 
 //this.up &&
 //         console.log(this.cell(tx,ty))
 
-        if(this.up){
-            console.log(nx)
-            if(this.bottomBorder){
-                if(cellright===2)
-                    GameModel.getInstance().level[ty][tx+1]=1
+        if (this.up) {
+            /*   if(this.bottomBorder){
+                   if(cellright===2)
+                       GameModel.getInstance().level[ty][tx+1]=1
 
-            }else
-            if(this.leftBorder){
-                if(celldown===2)
-                    GameModel.getInstance().level[ty+1][tx]=1
+               }else
+               if(this.leftBorder){
+                   if(celldown===2)
+                       GameModel.getInstance().level[ty+1][tx]=1
 
-            }else
-            if ((nx<=this.tileSize/2&&cell==2)) {
+               }else*/
 
-                GameModel.getInstance().level[ty][tx]=0
-            }
-            if(nx>=this.tileSize/2&&cellright==2){
-                GameModel.getInstance().level[ty][tx+1]=0
+            if (this.topBorder || this.bottomBorder) {
+                if ((nx <= this.tileSize / 2 && cell === 2)) {
+
+                    GameModel.getInstance().level[ty][tx] = 0
+                }
+                if (nx >= this.tileSize / 2 && cellright === 2) {
+                    GameModel.getInstance().level[ty][tx + 1] = 0
+                }
+            } else if (this.rightBorder) {
+
+                if (ny >= this.tileSize / 2 && celldown === 2) {
+                    GameModel.getInstance().level[ty + 1][tx] = 0
+                } else if (ny >= this.tileSize / 2 && cell === 2) {
+                    GameModel.getInstance().level[ty][tx] = 0
+                }
+
+            } else if (this.leftBorder) {
+
+                if (ny >= this.tileSize / 2 && cellup === 2) {
+                    GameModel.getInstance().level[ty - 1][tx] = 0
+                } else if (ny >= this.tileSize / 2 && celldown === 2) {
+                    GameModel.getInstance().level[ty+1][tx] = 0
+                }
+
             }
         }
 
 
-
-        if (this.dy > 0) {
+        if (this.dy > 0) { // going down
             if ((!celldown && cell) ||
                 (celldiag && !cellright && nx)) {
                 this.y = this.t2p(ty);
                 this.dx = -this.dy;
                 this.dy = 0;
                 this.falling = false;
-                this.rigthBorder = false;
+                this.rightBorder = false;
                 this.bottomBorder = true;
                 ny = 0;
             }
-        } else if (this.dy < 0) {
+        } else if (this.dy < 0) { //going up
             if ((!cell && celldown) ||
                 (cellright && !celldiag && nx)) {
                 this.y = this.t2p(ty + 1);
@@ -182,16 +201,16 @@ var Player = (function () {
         }
 
 
-        if (this.dx > 0) {
+        if (this.dx > 0) { //goint right
             if ((!cellright && cell) ||
                 (celldiag && !celldown && ny)) {
                 this.x = this.t2p(tx);
                 this.dy = this.dx;
                 this.dx = 0;
                 this.topBorder = false;
-                this.rigthBorder = true;
+                this.rightBorder = true;
             }
-        } else if (this.dx < 0) {
+        } else if (this.dx < 0) { //going left
             if ((!cell && cellright) ||
                 (celldown && !celldiag && ny)) {
                 this.x = this.t2p(tx + 1);
