@@ -6,15 +6,16 @@ var Player = (function () {
 
         this.tileSize = this.model.TILE;
 
-        this.x = this.tileSize *8;
-        this.y = this.tileSize*8;
+        this.x = this.tileSize;
+        this.y = this.tileSize;
+
+        this.maxdx = 100;     // default max horizontal speed (15 tiles per second)
+        this.maxdy = 100;      // default max vertical speed   (60 tiles per second)
 
         this.dx = 0;
+        this.ddx = this.maxdx;
         this.dy = 0;
-
-        this.maxdx = 40;     // default max horizontal speed (15 tiles per second)
-        this.maxdy = 40;      // default max vertical speed   (60 tiles per second)
-
+        this.ddy = 0;
 
         this.levelWidth = this.model.columns;
 
@@ -33,13 +34,7 @@ var Player = (function () {
             }
         }
 
-
-        this.topBorder = true;
-        this.rightBorder = false;
-        this.leftBorder = true;
-        this.bottomBorder = false;
-
-        this.speed = -300;
+        this.speed = 300;
 
         this.transitionToNextLevel = false;
     }
@@ -49,36 +44,39 @@ var Player = (function () {
         var ctx = this.model.ctx;
         ctx.fillStyle = "#09a90d";
 
-        ctx.fillRect(this.x + (this.dx * dt)+this.tileSize/4, this.y + (this.dy * dt)+this.tileSize/4, this.tileSize/2, this.tileSize/2)
+        ctx.fillRect(this.x + (this.dx * dt) + this.tileSize / 4, this.y + (this.dy * dt) + this.tileSize / 4, this.tileSize / 2, this.tileSize / 2)
     };
 
 
     Player.prototype.update = function (deltaTime) {
-        if(this.levelCompleted) return
+        if (this.levelCompleted) return
 
-        if (this.topBorder) {
-            this.ddx = this.speed;
-            this.ddy = 0;
+        // this.ddx = 0;
+        // this.ddy = this.speed;
+        //
+        /* if (this.topBorder) {
+             this.ddx = this.speed;
+             this.ddy = 0;
 
-        }
-        if (this.rightBorder) {
-            this.ddx = 0;
-            this.ddy = this.speed;
-        }
-        if (this.bottomBorder) {
-            this.ddx = -this.speed;
-            this.ddy = 0;
-        }
+         }
+         if (this.rightBorder) {
+             this.ddx = 0;
+             this.ddy = this.speed;
+         }
+         if (this.bottomBorder) {
+             this.ddx = -this.speed;
+             this.ddy = 0;
+         }
 
-        if (this.leftBorder) {
-            this.ddx = 0;
-            this.ddy = -this.speed;
-        }
+         if (this.leftBorder) {
+             this.ddx = 0;
+             this.ddy = -this.speed;
+         }
 
-        if (this.transitionToNextLevel) {
-            this.ddx = this.ddy = 0;
-            this.dx = this.dy = 0;
-        }
+         if (this.transitionToNextLevel) {
+             this.ddx = this.ddy = 0;
+             this.dx = this.dy = 0;
+         }*/
 
 
         this.x = this.x + (deltaTime * this.dx);
@@ -101,60 +99,74 @@ var Player = (function () {
 
         // if (this.up) {
 
-            if (this.topBorder||this.bottomBorder ) {
+        // if (this.topBorder||this.bottomBorder ) {
 
-                if(this.dx<0) {
-                    if (cell === 2 && nx <= this.tileSize / 2) {
-                        // console.log(nx)
-                        //
-                        this.fixBrokenCeil(tx, ty);
-                    }
-                    if (nx <= this.tileSize / 2 && cellright === 2) {
-                        // this.levelCompleted = true
+        if (this.dx < 0) {
+            if (cell === 2 && nx <= this.tileSize / 2) {
+                // console.log(nx)
+                //
 
-                        this.fixBrokenCeil(tx + 1, ty);
-                        // this.levelCompleted=true
+                this.fixBrokenCeil(tx, ty);
+            } else if (nx <= this.tileSize / 2 && cellright === 2) {
+                // this.levelCompleted = true
 
-                    }
-                }
-
-                if(this.dx>0) {
-                    if (cell === 2 && nx >= this.tileSize / 2) {
-                        // console.log(nx)
-                        //
-                        this.levelCompleted = true
-
-                        this.fixBrokenCeil(tx, ty);
-                    }
-                    if (nx >= this.tileSize / 2 && cellright === 2) {
-                        // this.levelCompleted = true
-
-                        this.fixBrokenCeil(tx + 1, ty);
-                        // this.levelCompleted=true
-
-                    }
-                }
-            }
-
-
-
-            else if (this.rightBorder || this.leftBorder) {
-
-                if (ny >= this.tileSize / 2 && celldown === 2) {
-                    this.fixBrokenCeil(tx, ty + 1);
-
-
-                } else if (ny >= this.tileSize / 2 && cell === 2) {
-                    this.fixBrokenCeil(tx, ty);
-
-
-                }
+                this.fixBrokenCeil(tx + 1, ty);
+                // this.levelCompleted=true
 
             }
-            if (this.brokenTiles === 0&&!this.model.levelCompleted) {
-                this.model.levelCompleted = true;
-                // this.model.prevLevelImageData = this.model.ctx.getImageData(0, 0, this.model.ctx.canvas.width, this.model.ctx.canvas.height);
+        }
+
+        if (this.dx > 0) {
+            if (cell === 2 && nx >= this.tileSize / 2) {
+                // console.log(nx)
+                //
+                // this.levelCompleted = true
+
+                this.fixBrokenCeil(tx, ty);
+            } else if (nx >= this.tileSize / 2 && cellright === 2) {
+                // this.levelCompleted = true
+
+                this.fixBrokenCeil(tx + 1, ty);
+                // this.levelCompleted=true
+
             }
+        }
+        // }
+
+
+        if (this.dy > 0) {
+            if (ny >= this.tileSize / 2 && celldown === 2) {
+                this.fixBrokenCeil(tx, ty + 1);
+            }
+            if (ny >= this.tileSize / 2 && cell === 2) {
+                this.fixBrokenCeil(tx, ty);
+            }
+
+        }
+
+        if (this.dy < 0) {
+            if (ny <= this.tileSize / 2 && celldown === 2) {
+                //upper half when goin up
+                this.fixBrokenCeil(tx, ty + 1);
+            }
+            if (ny <= this.tileSize / 2 && cell === 2) {
+                //lower half when goin up
+                this.fixBrokenCeil(tx, ty);
+            }
+
+        }
+
+
+        /*else if (ny >= this.tileSize / 2 && cell === 2) {
+            this.fixBrokenCeil(tx, ty);
+
+
+        }*/
+
+        if (this.brokenTiles === 0 && !this.model.levelCompleted) {
+            this.model.levelCompleted = true;
+            // this.model.prevLevelImageData = this.model.ctx.getImageData(0, 0, this.model.ctx.canvas.width, this.model.ctx.canvas.height);
+        }
         // }
 
 
@@ -163,49 +175,75 @@ var Player = (function () {
             this.transitionToNextLevel = true
 
         }
-        if (this.dy > 0) { // going down
-            if ((!celldown && cell) ||
-                (celldiag && !cellright && nx)) {
+        if (this.dy > 0) {//going down
+            if (!celldown && cellleft) { //turn left
                 this.y = this.t2p(ty);
-                this.dx = -this.dy;
+                this.ddx = -this.maxdx;
+                this.dx = -this.maxdx;
+                this.ddy = 0;
                 this.dy = 0;
-                this.falling = false;
-                this.rightBorder = false;
-                this.bottomBorder = true;
-                ny = 0;
+            } else {
+                if (!celldown && cellright) { //turn right
+                    this.y = this.t2p(ty);
+                    this.ddx = this.maxdx;
+                    this.dx = this.maxdx;
+                    this.ddy = 0;
+                    this.dy = 0;
+                }
             }
         } else if (this.dy < 0) { //going up
-            if ((!cell && celldown) ||
-                (cellright && !celldiag && nx)) {
+            if (!cell && celldiag) { //turn right
                 this.y = this.t2p(ty + 1);
-                this.dx = -this.dy;
+                this.ddx = this.maxdx;
+                this.dx = this.maxdx;
+                this.ddy = 0;
                 this.dy = 0;
-                cell = celldown;
-                cellright = celldiag;
-                ny = 0;
-                this.leftBorder = false;
-                this.topBorder = true;
+
+            } else {
+                if (!cell) { //turn left
+                    this.y = this.t2p(ty + 1);
+                    this.ddx = -this.maxdx;
+                    this.dx = -this.maxdx;
+                    this.ddy = 0;
+                    this.dy = 0;
+                }
             }
-        }
+        } else {
 
 
-        if (this.dx > 0) { //goint right
-            if ((!cellright && cell) ||
-                (celldiag && !celldown && ny)) {
-                this.x = this.t2p(tx);
-                this.dy = this.dx;
-                this.dx = 0;
-                this.topBorder = false;
-                this.rightBorder = true;
-            }
-        } else if (this.dx < 0) { //going left
-            if ((!cell && cellright) ||
-                (celldown && !celldiag && ny)) {
-                this.x = this.t2p(tx + 1);
-                this.dy = this.dx;
-                this.dx = 0;
-                this.bottomBorder = false;
-                this.leftBorder = true;
+            if (this.dx > 0) { // going right
+                if ((!cellright && celldown)) {//   turn down
+                    this.x = this.t2p(tx);
+                    this.ddy = this.maxdy;
+                    this.dy = this.maxdy;
+                    this.ddx = 0;
+                    this.dx = 0;
+                } else {
+                    if ((!cellright && cellup)) {//   turn up
+                        this.x = this.t2p(tx);
+                        this.ddy = -this.maxdy;
+                        this.dy = -this.maxdy;
+                        this.ddx = 0;
+                        this.dx = 0;
+                    }
+                }
+            } else if (this.dx < 0) {//going left
+                if (!cell && !celldiag) { // turn up
+                    this.x = this.t2p(tx + 1);
+                    this.ddy = -this.maxdy;
+                    this.dy = -this.maxdy;
+                    this.ddx = 0;
+                    this.dx = 0;
+
+                } else {
+                    if (!cell && celldiag) { //turn dow
+                        this.x = this.t2p(tx + 1);
+                        this.ddy = this.maxdy;
+                        this.dy = this.maxdy;
+                        this.ddx = 0;
+                        this.dx = 0;
+                    }
+                }
             }
         }
     };
@@ -213,6 +251,7 @@ var Player = (function () {
     Player.prototype.fixBrokenCeil = function (tx, ty) {
         if (this.model.level[ty][tx] === this.model.brokenTileId) {
             this.model.level[ty][tx] = 1;
+            this.cells[tx + (ty * this.levelWidth)] = 1;
             this.brokenTiles--;
         }
     };
