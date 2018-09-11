@@ -6,16 +6,14 @@ var Player = (function () {
 
         this.tileSize = this.model.TILE;
 
-        this.x = this.tileSize * 2;
-        this.y = this.tileSize;
+        this.x = this.tileSize *8;
+        this.y = this.tileSize*8;
 
         this.dx = 0;
         this.dy = 0;
 
-        this.accel = 300;
-
-        this.maxdx = 200;     // default max horizontal speed (15 tiles per second)
-        this.maxdy = 200;      // default max vertical speed   (60 tiles per second)
+        this.maxdx = 40;     // default max horizontal speed (15 tiles per second)
+        this.maxdy = 40;      // default max vertical speed   (60 tiles per second)
 
 
         this.levelWidth = this.model.columns;
@@ -38,10 +36,10 @@ var Player = (function () {
 
         this.topBorder = true;
         this.rightBorder = false;
-        this.leftBorder = false;
+        this.leftBorder = true;
         this.bottomBorder = false;
 
-        this.speed = 300;
+        this.speed = -300;
 
         this.transitionToNextLevel = false;
     }
@@ -51,11 +49,12 @@ var Player = (function () {
         var ctx = this.model.ctx;
         ctx.fillStyle = "#09a90d";
 
-        ctx.fillRect(this.x + (this.dx * dt), this.y + (this.dy * dt), this.tileSize, this.tileSize)
+        ctx.fillRect(this.x + (this.dx * dt)+this.tileSize/4, this.y + (this.dy * dt)+this.tileSize/4, this.tileSize/2, this.tileSize/2)
     };
 
 
     Player.prototype.update = function (deltaTime) {
+        if(this.levelCompleted) return
 
         if (this.topBorder) {
             this.ddx = this.speed;
@@ -94,24 +93,52 @@ var Player = (function () {
             ny = this.y % this.tileSize,
             cell = this.tcell(tx, ty),
             cellright = this.tcell(tx + 1, ty),
+            cellleft = this.tcell(tx - 1, ty),
             celldown = this.tcell(tx, ty + 1),
             celldiag = this.tcell(tx + 1, ty + 1),
             cellup = this.tcell(tx, ty - 1);
 
 
-        if (this.up) {
+        // if (this.up) {
 
-            if (this.topBorder || this.bottomBorder) {
-                if ((nx <= this.tileSize / 2 && cell === 2)) {
+            if (this.topBorder||this.bottomBorder ) {
 
+                if(this.dx<0) {
+                    if (cell === 2 && nx <= this.tileSize / 2) {
+                        // console.log(nx)
+                        //
+                        this.fixBrokenCeil(tx, ty);
+                    }
+                    if (nx <= this.tileSize / 2 && cellright === 2) {
+                        // this.levelCompleted = true
 
-                    this.fixBrokenCeil(tx, ty);
+                        this.fixBrokenCeil(tx + 1, ty);
+                        // this.levelCompleted=true
+
+                    }
                 }
-                if (nx >= this.tileSize / 2 && cellright === 2) {
-                    this.fixBrokenCeil(tx + 1, ty);
 
+                if(this.dx>0) {
+                    if (cell === 2 && nx >= this.tileSize / 2) {
+                        // console.log(nx)
+                        //
+                        this.levelCompleted = true
+
+                        this.fixBrokenCeil(tx, ty);
+                    }
+                    if (nx >= this.tileSize / 2 && cellright === 2) {
+                        // this.levelCompleted = true
+
+                        this.fixBrokenCeil(tx + 1, ty);
+                        // this.levelCompleted=true
+
+                    }
                 }
-            } else if (this.rightBorder || this.leftBorder) {
+            }
+
+
+
+            else if (this.rightBorder || this.leftBorder) {
 
                 if (ny >= this.tileSize / 2 && celldown === 2) {
                     this.fixBrokenCeil(tx, ty + 1);
@@ -126,9 +153,9 @@ var Player = (function () {
             }
             if (this.brokenTiles === 0&&!this.model.levelCompleted) {
                 this.model.levelCompleted = true;
-                this.model.prevLevelImageData = this.model.ctx.getImageData(0, 0, this.model.ctx.canvas.width, this.model.ctx.canvas.height);
+                // this.model.prevLevelImageData = this.model.ctx.getImageData(0, 0, this.model.ctx.canvas.width, this.model.ctx.canvas.height);
             }
-        }
+        // }
 
 
         if (cellup === 3 && this.model.levelCompleted === true) {
