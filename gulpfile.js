@@ -1,18 +1,20 @@
 var gulp = require('gulp');
 var concat = require('gulp-concat');
-var uglify = require('gulp-uglify');
+const minifyJS = require('gulp-terser');
+const zip = require('gulp-zip');
 
-gulp.task('default', function() {
+gulp.task('default', function () {
 
-    var JS_SOURCES = [
-        'src/main.js',
-        'src/player.js'
-    ];
-
-    return gulp.src(JS_SOURCES)
+    return gulp.src('src/*.js')
         .pipe(concat('main.js'))
-        // .pipe(uglify())
+        .pipe(minifyJS())
         .pipe(gulp.dest(`${__dirname}/dist`));
 
+});
 
+gulp.task('zip', function () {
+
+    return gulp.src(`${__dirname}/dist/**`)
+        .pipe(zip('game.zip'))
+        .pipe(gulp.dest('zip'))
 });

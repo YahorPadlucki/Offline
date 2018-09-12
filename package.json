@@ -27,6 +27,7 @@
     "gulp-watch": "^4.3.11",
     "gulp-wrap": "^0.13.0",
     "gulp-zip": "^4.0.0",
-    "run-sequence": "^1.2.2"
+    "run-sequence": "^1.2.2",
+    "gulp-terser": "^1.0.1"
   }
 }

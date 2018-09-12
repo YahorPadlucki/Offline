@@ -4,6 +4,12 @@ init = function () {
     var level = new Level();
     engine.elementsToDraw.push(level)
 
+    var server = new Server();
+    engine.elementsToDraw.push(server)
+
+    var display = new Display();
+    engine.elementsToDraw.push(display)
+
     var player = new Player();
     engine.elementsToDraw.push(player);
     engine.elementsToUpdate.push(player);

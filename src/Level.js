@@ -14,22 +14,28 @@ var Level = (function () {
         var model = GameModel.getInstance();
         var ctx = model.ctx;
 
-        if (model.prevLevelImageData) {
-            // model.prevLevelImageData.width = 200;
-            // model.prevLevelImageData.height = 200;
-            ctx.putImageData(model.prevLevelImageData, 50, 50);
-        }
 
 
         for (i = 0; i < this.rows; i++) {
             for (j = 0; j < this.columns; j++) {
+
+                var tile = this.level[i][j];
+
+
                 if (this.level[i][j] === 1) {
+
                     ctx.fillStyle = "#000000";
                     ctx.fillRect(j * this.tileSize, i * this.tileSize, this.tileSize, this.tileSize);
 
                 }
+
+                if (this.level[i][j] === 8) {
+                    ctx.fillStyle = "#ff1037";
+                    ctx.fillRect(j * this.tileSize, i * this.tileSize, this.tileSize, this.tileSize);
+
+                }
+
                 var angle = null;
-                var tile = this.level[i][j];
                 if (tile === 2) { //up
                     angle = 270
                 }
@@ -48,6 +54,49 @@ var Level = (function () {
 
             }
         }
+
+        if(model.showTutor)
+        {
+            ctx.fillStyle = "#343434";
+            ctx.font = "20px arial";
+            ctx.fillText("press up arrow to fix", 50,25);
+
+            ctx.fillStyle = "#343434";
+            ctx.font = "20px arial";
+            ctx.fillText("press down arrow to fix", 270,25);
+        }
+
+
+        if(model.currentLevel===1)
+        {
+            ctx.fillStyle = "#343434";
+            ctx.font = "20px arial";
+            ctx.fillText("You will need to use all the arrow keys to get online!", 50,25)
+        }
+
+
+        if(model.currentLevel===2)
+        {
+            ctx.fillStyle = "#343434";
+            ctx.font = "20px arial";
+            ctx.fillText("Internet is hard! But you can Do It!", 100,25)
+        }
+
+        if(model.currentLevel===3)
+        {
+            ctx.fillStyle = "#343434";
+            ctx.font = "20px arial";
+            ctx.fillText("That's how dial up looks like!", 100,25)
+        }
+
+        if(model.currentLevel===4)
+        {
+            ctx.fillStyle = "#343434";
+            ctx.font = "20px arial";
+            ctx.fillText("U are the winner! Thanks for playing!", 80,25)
+        }
+
+
     };
 
     Level.prototype.drawArrow = function (context, x, y, x_center, y_center, rotationAngle) {
@@ -57,7 +106,7 @@ var Level = (function () {
         var arrowLineY;
         var r = 10;
 
-        context.fillStyle = "#ff1037";
+        context.fillStyle = "#ffffff";
 
         context.fillRect(x, y, this.tileSize, this.tileSize)
 
@@ -65,7 +114,7 @@ var Level = (function () {
         angle = rotationAngle * Math.PI / 180;
         arrowLineX = r * Math.cos(angle) + x_center;
         arrowLineY = r * Math.sin(angle) + y_center;
-        context.fillStyle = "#ffffff";
+        context.fillStyle = "#ff1037";
 
         context.moveTo(arrowLineX, arrowLineY);
         // context.fillRect(x_center-2.5, y_center, 5, -15)
