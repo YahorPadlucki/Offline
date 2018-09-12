@@ -22,6 +22,7 @@ var Player = (function () {
         this.level = this.model.level;
 
         this.cells = [];
+        this.cellsToFix = [2, 3, 4, 5];
         this.brokenTiles = 0;
 
         for (var i = 0; i < this.level.length; i++) {
@@ -34,15 +35,12 @@ var Player = (function () {
             }
         }
 
-        this.speed = 300;
-
-        this.transitionToNextLevel = false;
     }
 
 
     Player.prototype.draw = function (dt) {
         var ctx = this.model.ctx;
-        ctx.fillStyle = "#09a90d";
+        ctx.fillStyle = "#ffcf3d";
 
         ctx.fillRect(this.x + (this.dx * dt) + this.tileSize / 4, this.y + (this.dy * dt) + this.tileSize / 4, this.tileSize / 2, this.tileSize / 2)
     };
@@ -50,34 +48,6 @@ var Player = (function () {
 
     Player.prototype.update = function (deltaTime) {
         if (this.levelCompleted) return
-
-        // this.ddx = 0;
-        // this.ddy = this.speed;
-        //
-        /* if (this.topBorder) {
-             this.ddx = this.speed;
-             this.ddy = 0;
-
-         }
-         if (this.rightBorder) {
-             this.ddx = 0;
-             this.ddy = this.speed;
-         }
-         if (this.bottomBorder) {
-             this.ddx = -this.speed;
-             this.ddy = 0;
-         }
-
-         if (this.leftBorder) {
-             this.ddx = 0;
-             this.ddy = -this.speed;
-         }
-
-         if (this.transitionToNextLevel) {
-             this.ddx = this.ddy = 0;
-             this.dx = this.dy = 0;
-         }*/
-
 
         this.x = this.x + (deltaTime * this.dx);
         this.y = this.y + (deltaTime * this.dy);
@@ -101,13 +71,13 @@ var Player = (function () {
 
         // if (this.topBorder||this.bottomBorder ) {
 
-        if (this.dx < 0) {
-            if (cell === 2 && nx <= this.tileSize / 2) {
+        if (this.dx < 0) { // going left
+            if (this.cellsToFix.indexOf(cell) !== -1 && nx <= this.tileSize / 2) {
                 // console.log(nx)
                 //
 
                 this.fixBrokenCeil(tx, ty);
-            } else if (nx <= this.tileSize / 2 && cellright === 2) {
+            } else if (nx <= this.tileSize / 2 && this.cellsToFix.indexOf(cellright) !== -1) {
                 // this.levelCompleted = true
 
                 this.fixBrokenCeil(tx + 1, ty);
@@ -116,14 +86,15 @@ var Player = (function () {
             }
         }
 
-        if (this.dx > 0) {
-            if (cell === 2 && nx >= this.tileSize / 2) {
+        if (this.dx > 0) { // going right
+
+            if (this.cellsToFix.indexOf(cell) !== -1 && nx >= this.tileSize / 2) { //second half
                 // console.log(nx)
                 //
                 // this.levelCompleted = true
 
                 this.fixBrokenCeil(tx, ty);
-            } else if (nx >= this.tileSize / 2 && cellright === 2) {
+            } else if (nx >= this.tileSize / 2 && this.cellsToFix.indexOf(cellright) !== -1) { //first half
                 // this.levelCompleted = true
 
                 this.fixBrokenCeil(tx + 1, ty);
@@ -134,23 +105,21 @@ var Player = (function () {
         // }
 
 
-        if (this.dy > 0) {
-            if (ny >= this.tileSize / 2 && celldown === 2) {
+        if (this.dy > 0) { // going down
+            if (ny >= this.tileSize / 2 && this.cellsToFix.indexOf(celldown) !== -1) { // first half
                 this.fixBrokenCeil(tx, ty + 1);
             }
-            if (ny >= this.tileSize / 2 && cell === 2) {
+            if (ny >= this.tileSize / 2 && this.cellsToFix.indexOf(cell) !== -1) { //second half
                 this.fixBrokenCeil(tx, ty);
             }
 
         }
 
-        if (this.dy < 0) {
-            if (ny <= this.tileSize / 2 && celldown === 2) {
-                //upper half when goin up
+        if (this.dy < 0) { // going up
+            if (ny <= this.tileSize / 2 && this.cellsToFix.indexOf(celldown) !== -1) { //second
                 this.fixBrokenCeil(tx, ty + 1);
             }
-            if (ny <= this.tileSize / 2 && cell === 2) {
-                //lower half when goin up
+            if (ny <= this.tileSize / 2 && this.cellsToFix.indexOf(cell) !== -1) { //first
                 this.fixBrokenCeil(tx, ty);
             }
 
@@ -170,11 +139,7 @@ var Player = (function () {
         // }
 
 
-        if (cellup === 3 && this.model.levelCompleted === true) {
-            this.y = this.t2p(ty - 1);
-            this.transitionToNextLevel = true
 
-        }
         if (this.dy > 0) {//going down
             if (!celldown && cellleft) { //turn left
                 this.y = this.t2p(ty);
@@ -249,7 +214,7 @@ var Player = (function () {
     };
 
     Player.prototype.fixBrokenCeil = function (tx, ty) {
-        if (this.model.level[ty][tx] === this.model.brokenTileId) {
+        if (this.cellsToFix.indexOf(this.model.level[ty][tx]) !== -1) {
             this.model.level[ty][tx] = 1;
             this.cells[tx + (ty * this.levelWidth)] = 1;
             this.brokenTiles--;
