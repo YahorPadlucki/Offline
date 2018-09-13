@@ -1,10 +1,6 @@
 var Server = (function () {
     function Server() {
-
-        this.columns = GameModel.getInstance().columns;
-        this.rows = GameModel.getInstance().rows;
         this.tileSize = GameModel.getInstance().TILE;
-        this.level = GameModel.getInstance().level;
     }
 
 

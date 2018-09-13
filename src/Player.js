@@ -10,7 +10,7 @@ var Player = (function () {
         this.x = this.tileSize * 4;
         this.y = this.tileSize * 7;
 
-        this.speed = 100;     // default max horizontal speed (15 tiles per second)
+        this.speed = 100;
 
         this.dx = 0;
         this.ddx = this.speed;
@@ -22,12 +22,9 @@ var Player = (function () {
         this.level = this.model.level;
 
         this.cells = [];
-        this.cellsToFix = [2, 3, 4, 5];
-        this.brokenTiles = 0;
+        this.cellsToFixIndexes = [2, 3, 4, 5];
 
         saveLevelData.call(this);
-
-
     }
 
 
@@ -71,59 +68,39 @@ var Player = (function () {
 
 
         if (this.dx < 0) { // going left
-            if (this.cellsToFix.indexOf(cell) !== -1 && nx <= this.tileSize / 2) {
-                // console.log(nx)
-                //
-
+            if (this.cellsToFixIndexes.indexOf(cell) !== -1 && nx <= this.tileSize / 2) {
                 this.onBrokenTileEntered(tx, ty);
-            } else if (nx <= this.tileSize / 2 && this.cellsToFix.indexOf(cellright) !== -1) {
-                // this.levelCompleted = true
-
+            } else if (nx <= this.tileSize / 2 && this.cellsToFixIndexes.indexOf(cellright) !== -1) {
                 this.onBrokenTileEntered(tx + 1, ty);
-                // this.levelCompleted=true
-
             }
 
-            if (this.cellsToFix.indexOf(cellright2) !== -1) {
+            if (this.cellsToFixIndexes.indexOf(cellright2) !== -1) {
                 this.setNotFixed(tx + 2, ty)
-
             }
-
-
         }
 
         if (this.dx > 0) { // going right
 
-            if (this.cellsToFix.indexOf(cell) !== -1 && nx >= this.tileSize / 2) { //second half
-                // console.log(nx)
-                //
-                // this.levelCompleted = true
-
+            if (this.cellsToFixIndexes.indexOf(cell) !== -1 && nx >= this.tileSize / 2) { //second half
                 this.onBrokenTileEntered(tx, ty);
-            } else if (nx >= this.tileSize / 2 && this.cellsToFix.indexOf(cellright) !== -1) { //first half
-                // this.levelCompleted = true
-
+            } else if (nx >= this.tileSize / 2 && this.cellsToFixIndexes.indexOf(cellright) !== -1) { //first half
                 this.onBrokenTileEntered(tx + 1, ty);
-                // this.levelCompleted=true
-
             }
 
-            if (this.cellsToFix.indexOf(cellleft) !== -1) {
+            if (this.cellsToFixIndexes.indexOf(cellleft) !== -1) {
                 this.setNotFixed(tx - 1, ty)
             }
         }
-        // }
-
 
         if (this.dy > 0) { // going down
-            if (ny >= this.tileSize / 2 && this.cellsToFix.indexOf(celldown) !== -1) { // first half
+            if (ny >= this.tileSize / 2 && this.cellsToFixIndexes.indexOf(celldown) !== -1) { // first half
                 this.onBrokenTileEntered(tx, ty + 1);
             }
-            if (ny >= this.tileSize / 2 && this.cellsToFix.indexOf(cell) !== -1) { //second half
+            if (ny >= this.tileSize / 2 && this.cellsToFixIndexes.indexOf(cell) !== -1) { //second half
                 this.onBrokenTileEntered(tx, ty);
             }
 
-            if (this.cellsToFix.indexOf(cellup) !== -1) {
+            if (this.cellsToFixIndexes.indexOf(cellup) !== -1) {
                 this.setNotFixed(tx, ty - 1)
 
             }
@@ -131,34 +108,19 @@ var Player = (function () {
         }
 
         if (this.dy < 0) { // going up
-            if (ny <= this.tileSize / 2 && this.cellsToFix.indexOf(celldown) !== -1) { //second
+            if (ny <= this.tileSize / 2 && this.cellsToFixIndexes.indexOf(celldown) !== -1) { //second
                 this.onBrokenTileEntered(tx, ty + 1);
             }
-            if (ny <= this.tileSize / 2 && this.cellsToFix.indexOf(cell) !== -1) { //first
+            if (ny <= this.tileSize / 2 && this.cellsToFixIndexes.indexOf(cell) !== -1) { //first
                 this.onBrokenTileEntered(tx, ty);
             }
 
-            if (this.cellsToFix.indexOf(celldown2) !== -1) {
+            if (this.cellsToFixIndexes.indexOf(celldown2) !== -1) {
                 this.setNotFixed(tx, ty + 2)
 
             }
 
         }
-
-
-        /*else if (ny >= this.tileSize / 2 && cell === 2) {
-            this.fixBrokenCeil(tx, ty);
-
-
-        }*/
-
-        /* if (this.brokenTiles === 0 && !this.model.levelCompleted) {
-             this.model.levelCompleted = true;
-             // this.model.prevLevelImageData = this.model.ctx.getImageData(0, 0, this.model.ctx.canvas.width, this.model.ctx.canvas.height);
-         }*/
-        // }
-
-
         if (this.dy > 0) {//going down
             if (!celldown && cellleft) { //turn left
                 this.y = this.t2p(ty);
@@ -270,7 +232,7 @@ var Player = (function () {
 
         }
 
-        if (fixed && this.cellsToFix.indexOf(cell) !== -1) {
+        if (fixed && this.cellsToFixIndexes.indexOf(cell) !== -1) {
             this.model.level[ty][tx] = 1;
             this.cells[tx + (ty * this.levelWidth)] = 1;
             this.brokenTiles--;
@@ -327,9 +289,6 @@ var Player = (function () {
             this.speed = 250;
         if (this.model.currentLevel === 4)
             this.speed = 300;
-
-        this.model.showHello = false;
-
 
         var obstaclesOnLevel = [0, 5, 8, 10, 5, 8, 10];
         var reservedTiles = [36, 41, 42, 44, 48, 49, 50, 51, 52, 56, 60, 69, 73, 84];
@@ -401,12 +360,6 @@ var Player = (function () {
         this.cells = [];
         for (var i = 0; i < this.model.level.length; i++) {
             this.cells = this.cells.concat(this.model.level[i]);
-        }
-
-        for (var j = 0; j < this.cells.length; j++) {
-            if (this.cells [j] === this.model.brokenTileId) {
-                this.brokenTiles++;
-            }
         }
     }
 

@@ -24,23 +24,14 @@ var GameModel = (function () {
 
         return {
             ctx: "",
-            doc: "",
-            engine: "",
-            score: 0,
-            device: "",
             TILE: 32,
             columns: 15,
             rows: 15,
             level: this.level,
-            levelCompleted: false,
-            brokenTileId: 2,
-            currentLevel:0,
-            gameEnded:false,
-            lifes:3,
-            showTutor:true,
-            showHello:true
-
-
+            currentLevel: 0,
+            gameEnded: false,
+            lifes: 3,
+            showTutor: true,
         };
 
 

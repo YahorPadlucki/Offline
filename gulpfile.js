@@ -2,6 +2,7 @@ var gulp = require('gulp');
 var concat = require('gulp-concat');
 const minifyJS = require('gulp-terser');
 const zip = require('gulp-zip');
+const minify = require('gulp-minify');
 
 gulp.task('default', function () {
 

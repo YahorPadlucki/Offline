@@ -21,13 +21,14 @@
     "gulp-clean": "^0.3.2",
     "gulp-clean-css": "^3.7.0",
     "gulp-concat": "^2.6.1",
+    "gulp-minify": "^3.1.0",
     "gulp-replace": "^0.6.1",
     "gulp-size": "^2.1.0",
+    "gulp-terser": "^1.0.1",
     "gulp-uglify": "^3.0.0",
     "gulp-watch": "^4.3.11",
     "gulp-wrap": "^0.13.0",
     "gulp-zip": "^4.0.0",
-    "run-sequence": "^1.2.2",
-    "gulp-terser": "^1.0.1"
+    "run-sequence": "^1.2.2"
   }
 }

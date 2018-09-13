@@ -2,13 +2,12 @@ var Engine = (function (global) {
 
     var window = global.window;
     var document = window.document;
-    var canvas =  document.getElementById('c');
+    var canvas = document.getElementById('c');
     var ctx = canvas.getContext('2d');
 
     function Engine() {
 
         GameModel.getInstance().ctx = ctx;
-        GameModel.getInstance().doc = document;
 
         this.elementsToUpdate = [];
         this.elementsToDraw = [];
@@ -19,23 +18,14 @@ var Engine = (function (global) {
         this.enterFrame();
     };
 
-    Engine.prototype.removeFromUpdate = function (element) {
-        Utils.removeFromArray(this.elementsToUpdate, element);
-
-    };
-
-    Engine.prototype.removeFromDraw = function (element) {
-        Utils.removeFromArray(this.elementsToDraw, element);
-
-    };
-
-
     Engine.prototype.enterFrame = function () {
 
         GameModel.getInstance().ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
         var now = Date.now();
         var deltaTime = (now - this.prevTime) / 1000.0;
+        if (deltaTime > 0.5)
+            deltaTime = 0;
 
         this.draw(deltaTime);
         this.update(deltaTime);
@@ -53,10 +43,11 @@ var Engine = (function (global) {
     };
 
     Engine.prototype.draw = function (deltaTime) {
+
         for (var i = 0; i < this.elementsToDraw.length; i++) {
             //
             var element = this.elementsToDraw[i];
-                element.draw(deltaTime);
+            element.draw(deltaTime);
         }
     };
 
